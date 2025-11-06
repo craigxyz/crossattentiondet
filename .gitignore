@@ -1,0 +1,83 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.pytest_cache
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Data and Results
+data/images/*.npy
+data/labels/*.txt
+data/labels/*.npy
+data/*.txt
+*.npy
+dummy_data/
+test_data/
+daytest*/
+nighttest*/
+test_results/
+visualization_results/
+*.zip
+
+# Model Checkpoints and Logs
+checkpoints/*.pth
+checkpoints/*.pt
+*.pth
+*.pt
+results/
+log_*/
+*.log
+tb/
+
+# Tensorboard
+runs/
+**/tb/
+
+# System
+.ipynb_checkpoints/
+*.bak
+*.tmp
+*.temp
+
+# Keep directory structure
+!.gitkeep
+!data/images/.gitkeep
+!data/labels/.gitkeep
+!checkpoints/.gitkeep
+!results/.gitkeep

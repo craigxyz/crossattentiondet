@@ -157,11 +157,64 @@ This script will:
 
 ### Evaluation
 
+**Single Model Evaluation:**
+
 ```bash
 python scripts/test.py --data data/ --model crossattentiondet.pth
 ```
 
 Results are saved to the test_results/ directory with visualizations of ground truth and predicted bounding boxes.
+
+**Batch Evaluation (All Backbones):**
+
+To evaluate all trained backbone variants and compare their performance:
+
+```bash
+# Evaluate all backbones
+python scripts/test_all_backbones.py --data data/ --checkpoint-dir checkpoints/
+
+# Evaluate specific backbones
+python scripts/test_all_backbones.py \
+    --data data/ \
+    --checkpoint-dir checkpoints/ \
+    --backbones mit_b0 mit_b1 mit_b5
+
+# Using the bash wrapper
+./scripts/test_all_backbones.sh data/ checkpoints/ 2
+```
+
+This script will:
+- Evaluate each backbone checkpoint on the test set
+- Measure inference speed (ms/image, FPS)
+- Calculate model size and parameter counts
+- Compute detection metrics (mAP, mAP@50, mAP@75)
+- Generate comparison rankings by speed, accuracy, and size
+- Save a timestamped summary report
+
+**Example Output:**
+
+```
+Model Comparison:
+--------------------------------------------------------------------------------
+Backbone   Params       Size(MB)   Time(ms)     FPS      mAP@50     mAP
+--------------------------------------------------------------------------------
+mit_b0          3.7M      14.21        12.45    80.32    0.7234    0.4521
+mit_b1         13.5M      51.32        18.67    53.56    0.7891    0.5234
+mit_b2         24.7M      94.12        25.34    39.47    0.8123    0.5678
+mit_b4         61.4M     233.45        42.12    23.74    0.8456    0.6012
+mit_b5         81.9M     311.23        51.23    19.52    0.8534    0.6123
+--------------------------------------------------------------------------------
+
+Speed Ranking (fastest to slowest):
+  1. mit_b0     - 12.45 ms/image (80.32 FPS)
+  2. mit_b1     - 18.67 ms/image (53.56 FPS)
+  ...
+
+Accuracy Ranking (mAP, best to worst):
+  1. mit_b5     - mAP: 0.6123, mAP@50: 0.8534
+  2. mit_b4     - mAP: 0.6012, mAP@50: 0.8456
+  ...
+```
 
 ### Visualization
 

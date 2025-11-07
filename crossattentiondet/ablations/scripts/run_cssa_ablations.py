@@ -337,8 +337,8 @@ def main():
                         choices=['mit_b0', 'mit_b1', 'mit_b2', 'mit_b4', 'mit_b5'],
                         help='Backbone architecture')
     parser.add_argument('--epochs', type=int, default=25, help='Number of epochs per experiment')
-    parser.add_argument('--batch-size', type=int, default=2, help='Batch size')
-    parser.add_argument('--lr', type=float, default=0.005, help='Learning rate')
+    parser.add_argument('--batch-size', type=int, default=16, help='Batch size')
+    parser.add_argument('--lr', type=float, default=0.02, help='Learning rate')
 
     args = parser.parse_args()
 

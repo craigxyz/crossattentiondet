@@ -9,7 +9,6 @@ Usage:
         --data ../RGBX_Semantic_Segmentation/data/images \
         --labels ../RGBX_Semantic_Segmentation/data/labels \
         --epochs 25 \
-        --batch-size 2 \
         --backbone mit_b1 \
         --cssa-stages "1,2,3,4" \
         --cssa-thresh 0.5 \
@@ -456,8 +455,8 @@ def main():
                         choices=['mit_b0', 'mit_b1', 'mit_b2', 'mit_b4', 'mit_b5'],
                         help='Backbone architecture')
     parser.add_argument('--epochs', type=int, default=25, help='Number of training epochs')
-    parser.add_argument('--batch-size', type=int, default=2, help='Batch size')
-    parser.add_argument('--lr', type=float, default=0.005, help='Learning rate')
+    parser.add_argument('--batch-size', type=int, default=16, help='Batch size')
+    parser.add_argument('--lr', type=float, default=0.02, help='Learning rate')
 
     # CSSA-specific args
     parser.add_argument('--cssa-stages', type=str, default='4',

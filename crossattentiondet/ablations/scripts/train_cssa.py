@@ -9,7 +9,6 @@ Usage:
     python crossattentiondet/ablations/scripts/train_cssa.py \
         --data data/ \
         --epochs 25 \
-        --batch-size 2 \
         --backbone mit_b1 \
         --cssa-thresh 0.5
 
@@ -17,7 +16,6 @@ For 5-epoch sanity check:
     python crossattentiondet/ablations/scripts/train_cssa.py \
         --data data/ \
         --epochs 5 \
-        --batch-size 2 \
         --backbone mit_b1 \
         --model checkpoints/cssa_stage4_sanity.pth
 """
@@ -297,9 +295,9 @@ def main():
                         help='Backbone architecture')
     parser.add_argument('--epochs', type=int, default=25,
                         help='Number of training epochs')
-    parser.add_argument('--batch-size', type=int, default=2,
+    parser.add_argument('--batch-size', type=int, default=16,
                         help='Batch size')
-    parser.add_argument('--lr', type=float, default=0.005,
+    parser.add_argument('--lr', type=float, default=0.02,
                         help='Learning rate')
     parser.add_argument('--results-dir', type=str, default='test_results',
                         help='Directory for evaluation results')

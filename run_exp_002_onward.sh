@@ -10,9 +10,9 @@ DATA_DIR="../RGBX_Semantic_Segmentation/data/images"
 LABELS_DIR="../RGBX_Semantic_Segmentation/data/labels"
 OUTPUT_BASE="results/cssa_ablations"
 BACKBONE="mit_b1"
-EPOCHS=25
-BATCH_SIZE=2
-LR=0.005
+EPOCHS=15
+BATCH_SIZE=16
+LR=0.02
 THRESHOLD=0.5
 KERNEL=3
 

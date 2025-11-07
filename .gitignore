@@ -62,8 +62,19 @@ checkpoints/*.pt
 *.pt
 results/
 log_*/
+logs/
 *.log
 tb/
+
+# Ablation experiment outputs
+results/cssa_ablations/
+**/exp_*/
+**/metrics_*.csv
+**/summary_*.csv
+plots/
+**/*.png
+**/*.jpg
+**/*.pdf
 
 # Tensorboard
 runs/

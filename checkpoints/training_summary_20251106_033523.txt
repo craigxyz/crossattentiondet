@@ -1,0 +1,23 @@
+================================================================================
+TRAINING SUMMARY
+================================================================================
+
+Date: 2025-11-06 03:35:23
+Data directory: ../RGBX_Semantic_Segmentation/data/
+Epochs per backbone: 1
+Batch size: 2
+Learning rate: 0.005
+
+Total time: 13591.00 seconds (226.52 minutes)
+
+Results:
+--------------------------------------------------------------------------------
+  ✓ mit_b0   |  22.91 min | checkpoints/crossattentiondet_mit_b0.pth
+  ✓ mit_b1   |  26.42 min | checkpoints/crossattentiondet_mit_b1.pth
+  ✓ mit_b2   |  37.96 min | checkpoints/crossattentiondet_mit_b2.pth
+  ✓ mit_b4   |  64.87 min | checkpoints/crossattentiondet_mit_b4.pth
+  ✓ mit_b5   |  74.35 min | checkpoints/crossattentiondet_mit_b5.pth
+--------------------------------------------------------------------------------
+
+Successful: 5/5
+Failed: 0/5

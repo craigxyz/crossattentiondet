@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python -u
 """
 Training script for CSSA fusion ablation experiments.
 
@@ -27,6 +27,10 @@ import os
 import argparse
 from datetime import datetime
 
+# Force unbuffered output
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
+
 # Add project root to path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
 sys.path.insert(0, project_root)
@@ -36,8 +40,9 @@ from torch.utils.data import DataLoader
 from torchvision.ops import MultiScaleRoIAlign
 from torchvision.models.detection.anchor_utils import AnchorGenerator
 from torchvision.models.detection import FasterRCNN
+from torchvision.models.detection.transform import GeneralizedRCNNTransform
 
-from crossattentiondet.config import Config
+from crossattentiondet.config import Config, get_num_classes
 from crossattentiondet.data.dataset import NpyYoloDataset
 from crossattentiondet.models.backbone import CrossAttentionBackbone
 from crossattentiondet.training.evaluator import Evaluator
@@ -60,7 +65,10 @@ class CSSATrainer:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"Using device: {self.device}")
 
-        # Build model with CSSA encoder
+        # Setup data loaders FIRST to get num_classes
+        self.train_loader, self.test_loader = self.get_dataloaders()
+
+        # Build model with CSSA encoder (now that num_classes is set)
         self.model = self.build_model_cssa()
         self.model.to(self.device)
 
@@ -72,16 +80,8 @@ class CSSATrainer:
             weight_decay=0.0001
         )
 
-        # Setup data loaders
-        self.train_loader, self.test_loader = self.get_dataloaders()
-
-        # Setup evaluator
-        self.evaluator = Evaluator(
-            self.model,
-            self.test_loader,
-            self.device,
-            results_dir=config.results_dir
-        )
+        # Note: Evaluator will be created when needed for evaluation
+        # since it creates its own dataloader
 
     def build_model_cssa(self):
         """Build CrossAttentionDet model with CSSA fusion at Stage 4."""
@@ -117,12 +117,14 @@ class CSSATrainer:
             sampling_ratio=config.roi_sampling_ratio
         )
 
-        # Faster R-CNN
+        # Faster R-CNN with 5-channel normalization from config
         model = FasterRCNN(
             backbone,
             num_classes=config.num_classes,
             rpn_anchor_generator=anchor_generator,
-            box_roi_pool=roi_pooler
+            box_roi_pool=roi_pooler,
+            image_mean=config.image_mean,  # 5 channels from config
+            image_std=config.image_std      # 5 channels from config
         )
 
         return model
@@ -133,22 +135,22 @@ class CSSATrainer:
 
         # Training dataset
         train_dataset = NpyYoloDataset(
-            data_dir=config.data_dir,
-            labels_dir=config.labels_dir,
+            image_dir=config.data_dir,
+            label_dir=config.labels_dir,
             mode='train'
         )
 
         # Test dataset
         test_dataset = NpyYoloDataset(
-            data_dir=config.data_dir,
-            labels_dir=config.labels_dir,
+            image_dir=config.data_dir,
+            label_dir=config.labels_dir,
             mode='test'
         )
 
         # Update num_classes in config based on dataset
         if config.num_classes is None:
-            config.num_classes = train_dataset.num_classes
-            print(f"Detected {config.num_classes} classes from dataset")
+            config.num_classes = get_num_classes(config.labels_dir) + 1  # +1 for background class
+            print(f"Detected {config.num_classes} classes from dataset (including background)")
 
         # Collate function
         def collate_fn(batch):
@@ -159,7 +161,7 @@ class CSSATrainer:
             train_dataset,
             batch_size=config.batch_size,
             shuffle=True,
-            num_workers=4,
+            num_workers=0,  # Set to 0 to avoid worker process warnings
             collate_fn=collate_fn
         )
 
@@ -167,7 +169,7 @@ class CSSATrainer:
             test_dataset,
             batch_size=1,
             shuffle=False,
-            num_workers=4,
+            num_workers=0,  # Set to 0 to avoid worker process warnings
             collate_fn=collate_fn
         )
 
@@ -234,25 +236,60 @@ class CSSATrainer:
         print("=" * 60)
 
         # Final evaluation
-        print("\nRunning final evaluation...")
-        metrics = self.evaluator.evaluate()
+        print("\nRunning final evaluation on test set...")
+        self.model.eval()
+
+        from torchmetrics.detection.mean_ap import MeanAveragePrecision
+        metric = MeanAveragePrecision(iou_type="bbox")
+
+        with torch.no_grad():
+            for images, targets in self.test_loader:
+                images = [img.to(self.device) for img in images]
+                targets = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
+
+                predictions = self.model(images)
+
+                # Convert to format expected by torchmetrics
+                preds = []
+                for pred in predictions:
+                    preds.append({
+                        'boxes': pred['boxes'].cpu(),
+                        'scores': pred['scores'].cpu(),
+                        'labels': pred['labels'].cpu()
+                    })
+
+                tgts = []
+                for tgt in targets:
+                    tgts.append({
+                        'boxes': tgt['boxes'].cpu(),
+                        'labels': tgt['labels'].cpu()
+                    })
+
+                metric.update(preds, tgts)
+
+        results = metric.compute()
 
         print("\n" + "=" * 60)
         print("FINAL RESULTS")
         print("=" * 60)
-        for key, value in metrics.items():
-            print(f"{key}: {value:.4f}")
+        print(f"mAP: {results['map'].item():.4f}")
+        print(f"mAP@50: {results['map_50'].item():.4f}")
+        print(f"mAP@75: {results['map_75'].item():.4f}")
         print("=" * 60 + "\n")
 
 
 def main():
     parser = argparse.ArgumentParser(description='CSSA Fusion Ablation Training')
 
-    # Basic training args (matching original train.py)
-    parser.add_argument('--data', type=str, default='data/images',
-                        help='Path to image data directory')
-    parser.add_argument('--labels', type=str, default='data/labels',
-                        help='Path to labels directory')
+    # Dataset path - can use either --dataset or --data/--labels
+    parser.add_argument('--dataset', type=str, default=None,
+                        help='Path to dataset directory (containing images/ and labels/ subdirs)')
+    parser.add_argument('--data', type=str, default=None,
+                        help='Path to image data directory (alternative to --dataset)')
+    parser.add_argument('--labels', type=str, default=None,
+                        help='Path to labels directory (alternative to --dataset)')
+
+    # Other training args
     parser.add_argument('--model', type=str, default='checkpoints/cssa_stage4.pth',
                         help='Path to save model checkpoint')
     parser.add_argument('--backbone', type=str, default='mit_b1',
@@ -275,10 +312,28 @@ def main():
 
     args = parser.parse_args()
 
+    # Handle dataset path
+    if args.dataset:
+        # Use dataset/images and dataset/labels
+        data_dir = os.path.join(args.dataset, 'images')
+        labels_dir = os.path.join(args.dataset, 'labels')
+        print(f"Using dataset directory: {args.dataset}")
+        print(f"  Images: {data_dir}")
+        print(f"  Labels: {labels_dir}")
+    elif args.data and args.labels:
+        # Use explicit paths
+        data_dir = args.data
+        labels_dir = args.labels
+    else:
+        # Default fallback
+        data_dir = 'data/images'
+        labels_dir = 'data/labels'
+        print(f"Warning: No dataset path specified. Using defaults: {data_dir}, {labels_dir}")
+
     # Create config from args
     config = Config()
-    config.data_dir = args.data
-    config.labels_dir = args.labels
+    config.data_dir = data_dir
+    config.labels_dir = labels_dir
     config.model_path = args.model
     config.backbone_type = args.backbone
     config.epochs = args.epochs

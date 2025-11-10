@@ -55,7 +55,23 @@ class Evaluator:
             path = self.config.model_path
 
         print(f"\n4. Loading model from {path}...")
-        self.model.load_state_dict(torch.load(path, map_location=self.config.device))
+        checkpoint = torch.load(path, map_location=self.config.device)
+
+        # Handle different checkpoint formats
+        if isinstance(checkpoint, dict):
+            if 'model_state_dict' in checkpoint:
+                # Full training checkpoint
+                self.model.load_state_dict(checkpoint['model_state_dict'])
+            elif 'state_dict' in checkpoint:
+                # Alternative format
+                self.model.load_state_dict(checkpoint['state_dict'])
+            else:
+                # Assume the dict IS the state dict
+                self.model.load_state_dict(checkpoint)
+        else:
+            # Direct state dict
+            self.model.load_state_dict(checkpoint)
+
         self.model.eval()
         print("Model loaded successfully.")
 

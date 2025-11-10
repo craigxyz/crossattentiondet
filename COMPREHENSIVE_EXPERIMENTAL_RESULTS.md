@@ -121,9 +121,15 @@ Additional metrics from completed experiments:
 
 ---
 
-## 4. Modality Ablation Study
+## 4. Baseline Models (15 epochs) - Modality Combinations
 
-**Objective:** Evaluate model performance with different modality combinations
+**Architecture:** Standard CMX with FRM+FFM (baseline_FRM_FFM)
+
+**Training:** 15 epochs, batch_size=16, lr=0.02, backbone=mit_b1
+
+**Objective:** Establish baseline performance with standard fusion across different modality pairs
+
+**⚠️ IMPORTANT:** These are BASELINE experiments, not ablations. They use the standard CMX architecture.
 
 | Modality Pair | mAP | mAP@50 | mAP@75 | mAP_small | mAP_medium | mAP_large | Loss | Time (h) | Params (M) | Backbone |
 |---------------|-----|--------|--------|-----------|------------|-----------|------|----------|------------|----------|
@@ -131,7 +137,9 @@ Additional metrics from completed experiments:
 | RGB + THERMAL | 0.8342 | 0.9822 | 0.9602 | 0.6695 | 0.8458 | 0.7834 | 0.0946 | 4.20 | 60.01 | mit_b1 |
 | THERMAL + EVENT | 0.7486 | 0.9695 | 0.8929 | 0.6108 | 0.7584 | 0.8399 | 0.1192 | 4.08 | 60.01 | mit_b1 |
 
-**Best Modality Combination:** RGB + THERMAL with mAP=0.8342
+**Best Baseline (15 epochs):** RGB + THERMAL with mAP=0.8342 (83.42%)
+
+**This is the primary baseline for comparison with GAFF and CSSA ablations.**
 
 ---
 
@@ -157,7 +165,7 @@ Additional metrics from completed experiments:
 
 ---
 
-## 6. Baseline Models (CMX with FRM+FFM)
+## 6. Baseline Models (1 epoch) - Initial Validation
 
 **Fusion Method:** Original CMX with Feature Rectify Module (FRM) and Feature Fusion Module (FFM)
 
@@ -178,13 +186,15 @@ For fair comparison with ablation studies (15 epochs), these would need to be re
 
 ### Performance vs Ablation Studies
 
-**⚠️ Training Epoch Mismatch:**
-- Baseline models: **1 epoch** → mAP ~0.66 (66%)
-- GAFF ablations: **15 epochs** → mAP ~0.84 (84%)
-- CSSA ablations: **15 epochs** → mAP ~0.84 (84%)
-- Modality ablations: **15 epochs** → mAP ~0.83 (83%)
+**⚠️ See Section 4 for fair comparison:** The 15-epoch baseline (RGB+Thermal) achieves 83.42% mAP.
 
-**Fair comparison requires:** Retraining baseline models with 15 epochs to match ablation study protocols.
+**1-epoch results (this section):**
+- Best 1-epoch baseline: **66.24% mAP** (mit_b1)
+
+**15-epoch results (Section 4):**
+- Best 15-epoch baseline: **83.42% mAP** (RGB+Thermal)
+- Best GAFF ablation: **83.78% mAP** (+0.36%)
+- Best CSSA ablation: **84.07% mAP** (+0.65%)
 
 ### Speed-Accuracy Trade-off
 
@@ -199,18 +209,29 @@ For fair comparison with ablation studies (15 epochs), these would need to be re
 
 ### Top 10 Performing Experiments (by mAP)
 
-| Rank | Study | Experiment | mAP |
-|------|-------|------------|-----|
-| 1 | CSSA-P1 | exp_001_s1_t0.5 | 0.8407 |
-| 2 | GAFF | exp_012_s4_r8_is0_mb0 | 0.8378 |
-| 3 | CSSA-P1 | exp_001_s1_t0.5_fast | 0.8344 |
-| 4 | Modality | rgb_thermal | 0.8342 |
-| 5 | GAFF | exp_004_s4_r4_is0_mb0 | 0.8341 |
-| 6 | GAFF | exp_016_s3_r4_is0_mb1 | 0.8338 |
-| 7 | GAFF | exp_015_s4_r8_is1_mb1 | 0.8336 |
-| 8 | CSSA-P2 | exp_008_s1_t0.3 | 0.8323 |
-| 9 | GAFF | exp_014_s4_r8_is1_mb0 | 0.8320 |
-| 10 | CSSA-P1 | exp_004_s4_t0.5 | 0.8320 |
+| Rank | Study | Experiment | mAP | Δ vs Baseline |
+|------|-------|------------|-----|---------------|
+| 1 | CSSA-P1 | exp_001_s1_t0.5 | 0.8407 | +0.65% |
+| 2 | GAFF | exp_012_s4_r8_is0_mb0 | 0.8378 | +0.36% |
+| 3 | CSSA-P1 | exp_001_s1_t0.5_fast | 0.8344 | +0.02% |
+| **4** | **Baseline** | **rgb_thermal (FRM+FFM)** | **0.8342** | **—** |
+| 5 | GAFF | exp_004_s4_r4_is0_mb0 | 0.8341 | -0.01% |
+| 6 | GAFF | exp_016_s3_r4_is0_mb1 | 0.8338 | -0.04% |
+| 7 | GAFF | exp_015_s4_r8_is1_mb1 | 0.8336 | -0.06% |
+| 8 | CSSA-P2 | exp_008_s1_t0.3 | 0.8323 | -0.19% |
+| 9 | GAFF | exp_014_s4_r8_is1_mb0 | 0.8320 | -0.22% |
+| 10 | CSSA-P1 | exp_004_s4_t0.5 | 0.8320 | -0.22% |
+
+### Critical Findings: Baseline vs Ablations
+
+**Baseline Performance (15 epochs, RGB+Thermal):** 83.42% mAP
+
+**Ablation Study Results:**
+- Best GAFF: 83.78% mAP (+0.36% vs baseline)
+- Best CSSA: 84.07% mAP (+0.65% vs baseline)
+- Best CSSA fast: 83.44% mAP (+0.02% vs baseline)
+
+**Key Insight:** The fusion ablation methods (GAFF, CSSA) provide **marginal improvements (~0.5%)** over the standard FRM+FFM baseline when trained under identical conditions (15 epochs, same hyperparameters).
 
 ### Insights
 
@@ -224,10 +245,18 @@ For fair comparison with ablation studies (15 epochs), these would need to be re
 - mAP range: 0.7983 to 0.8407
 - Average mAP: 0.8245
 
-#### Modality Combinations:
+#### Baseline Modality Combinations:
 - Total combinations tested: 3
 - mAP range: 0.6632 to 0.8342
 - Average mAP: 0.7487
+- **Best baseline: RGB+Thermal at 83.42% mAP**
+
+**Modality Importance:**
+- RGB alone: Not tested separately
+- RGB + Thermal: 83.42% mAP (best combination)
+- RGB + Event: 66.32% mAP (poor performance)
+- Thermal + Event: 74.86% mAP (moderate)
+- **Conclusion:** RGB+Thermal is the optimal modality pair
 
 ---
 

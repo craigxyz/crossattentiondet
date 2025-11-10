@@ -6,13 +6,13 @@
 
 ## Executive Summary
 
-**Total Experiments Completed:** 34
+**Total Experiments Completed:** 39
 - GAFF Ablations: 17
 - CSSA Ablations (Phase 1): 8
 - CSSA Ablations (Phase 2): 5
 - Modality Ablations: 3
 - GAFF Pilot: 1
-- Baseline: 0
+- Baseline Models: 5
 
 ---
 
@@ -157,6 +157,44 @@ Additional metrics from completed experiments:
 
 ---
 
+## 6. Baseline Models (CMX with FRM+FFM)
+
+**Fusion Method:** Original CMX with Feature Rectify Module (FRM) and Feature Fusion Module (FFM)
+
+**Training:** 1 epoch, batch_size=2, lr=0.005
+
+**Important Note:** These baseline models were trained for only 1 epoch for initial validation. 
+For fair comparison with ablation studies (15 epochs), these would need to be retrained.
+
+| Backbone | Params (M) | mAP | mAP@50 | Size (MB) | Inference (ms) | FPS | Training (min) |
+|----------|------------|-----|--------|-----------|----------------|-----|----------------|
+| mit_b1 | 60.0 | 0.6624 | 0.9490 | 228.95 | 54.54 | 18.34 | 26.42 |
+| mit_b0 | 27.8 | 0.6465 | 0.9391 | 106.00 | 42.59 | 23.48 | 22.91 |
+| mit_b5 | 196.6 | 0.6318 | 0.9402 | 749.98 | 175.21 | 5.71 | 74.35 |
+| mit_b4 | 155.4 | 0.6270 | 0.9315 | 592.81 | 145.83 | 6.86 | 64.87 |
+| mit_b2 | 82.1 | 0.6242 | 0.9440 | 313.22 | 78.57 | 12.73 | 37.96 |
+
+**Best Baseline (1 epoch):** mit_b1 with mAP=0.6624 (66.24%)
+
+### Performance vs Ablation Studies
+
+**⚠️ Training Epoch Mismatch:**
+- Baseline models: **1 epoch** → mAP ~0.66 (66%)
+- GAFF ablations: **15 epochs** → mAP ~0.84 (84%)
+- CSSA ablations: **15 epochs** → mAP ~0.84 (84%)
+- Modality ablations: **15 epochs** → mAP ~0.83 (83%)
+
+**Fair comparison requires:** Retraining baseline models with 15 epochs to match ablation study protocols.
+
+### Speed-Accuracy Trade-off
+
+**Fastest:** mit_b0 (23.48 FPS, mAP=0.6465)
+
+**Best Accuracy:** mit_b1 (18.34 FPS, mAP=0.6624)
+
+**Slowest:** mit_b5 (5.71 FPS, mAP=0.6318)
+
+---
 ## 7. Key Findings
 
 ### Top 10 Performing Experiments (by mAP)
